@@ -2,7 +2,6 @@
 // Copyright 2025-2026 Mindful Software LLC d/b/a Dartastic.io, All rights reserved.
 
 import 'package:dartastic_opentelemetry/dartastic_opentelemetry.dart';
-import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 
 import 'otel_pusher_suppression.dart';
 
@@ -52,51 +51,65 @@ Future<T> tracedPusher<T>({
   final t = tracer ?? OTel.tracerProvider().getTracer('otel_pusher');
   final span = t.startSpan('pusher $operation', kind: SpanKind.producer);
   try {
-    span.setStringAttribute('messaging.system', 'pusher');
+    span.addAttributes(
+        OTel.attributes([OTel.attributeString('messaging.system', 'pusher')]));
     final r = await invoke();
     final res = r.result;
     if (res != null) {
       if (res.appId != null) {
-        span.setStringAttribute('pusher.app.id', res.appId!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeString('pusher.app.id', res.appId!)]));
       }
       if (res.cluster != null) {
-        span.setStringAttribute('pusher.cluster', res.cluster!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeString('pusher.cluster', res.cluster!)]));
       }
       if (res.channel != null) {
-        span.setStringAttribute('messaging.destination.name', res.channel!);
+        span.addAttributes(OTel.attributes([
+          OTel.attributeString('messaging.destination.name', res.channel!)
+        ]));
       }
       if (res.channelType != null) {
-        span.setStringAttribute('pusher.channel.type', res.channelType!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeString('pusher.channel.type', res.channelType!)]));
       }
       if (res.event != null) {
-        span.setStringAttribute('pusher.event', res.event!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeString('pusher.event', res.event!)]));
       }
       if (res.socketId != null) {
-        span.setStringAttribute('messaging.client_id', res.socketId!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeString('messaging.client_id', res.socketId!)]));
       }
       if (res.recipientCount != null) {
-        span.setIntAttribute(
-          'messaging.batch.message_count',
-          res.recipientCount!,
-        );
+        span.addAttributes(OTel.attributes([
+          OTel.attributeInt(
+            'messaging.batch.message_count',
+            res.recipientCount!,
+          )
+        ]));
       }
       if (res.encrypted != null) {
-        span.setBoolAttribute('pusher.encrypted', res.encrypted!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeBool('pusher.encrypted', res.encrypted!)]));
       }
       if (res.statusCode != null) {
-        span.setIntAttribute('http.response.status_code', res.statusCode!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeInt('http.response.status_code', res.statusCode!)]));
       }
       if (res.errorCode != null) {
-        span.setStringAttribute('pusher.error.code', res.errorCode!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeString('pusher.error.code', res.errorCode!)]));
       }
-      final fail =
-          res.errorCode != null ||
+      final fail = res.errorCode != null ||
           (res.statusCode != null && res.statusCode! >= 400);
       if (fail) {
-        span.setStringAttribute(
-          ErrorResource.errorType.key,
-          res.errorCode ?? 'pusher.error',
-        );
+        span.addAttributes(OTel.attributes([
+          OTel.attributeString(
+            ErrorResource.errorType.key,
+            res.errorCode ?? 'pusher.error',
+          )
+        ]));
         span.setStatus(SpanStatusCode.Error, res.errorMessage);
       }
     }
